@@ -35,30 +35,33 @@ jobs:
           npm run setup
           npm run dev:daemon
 
+      - name: Create MCP config
+        run: |
+          cat > /tmp/mcp-config.json << 'EOF'
+          {
+            "mcpServers": {
+              "playwright": {
+                "command": "npx",
+                "args": [
+                  "@playwright/mcp@latest",
+                  "--allowed-origins",
+                  "localhost:3000;cdn.tailwindcss.com;esm.sh"
+                ]
+              }
+            }
+          }
+          EOF
+
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-
-          settings: |
-            {
-              "mcpServers": {
-                "playwright": {
-                  "command": "npx",
-                  "args": [
-                    "@playwright/mcp@latest",
-                    "--allowed-origins",
-                    "localhost:3000;cdn.tailwindcss.com;esm.sh"
-                  ]
-                }
-              }
-            }
-
           claude_args: >-
-            --append-system-prompt "The Project is already setup with all dependency installed.
+            --system-prompt "The project is already set up with all dependencies installed.
             The server is already running at localhost:3000. Logs from it
             are being written to logs.txt. If needed, you can query the
-            db with the 'sqlite3' cli. If needed, use the mcp__playwright
-            set of tools to launch a browser and interact with app."
+            db with the sqlite3 cli. If needed, use the mcp__playwright
+            set of tools to launch a browser and interact with the app."
+            --mcp-config /tmp/mcp-config.json
             --allowedTools "Bash(npm:*),Bash(sqlite3:*),mcp__playwright__browser_navigate,mcp__playwright__browser_snapshot,mcp__playwright__browser_take_screenshot,mcp__playwright__browser_click,mcp__playwright__browser_type,mcp__playwright__browser_fill_form,mcp__playwright__browser_select_option,mcp__playwright__browser_hover,mcp__playwright__browser_drag,mcp__playwright__browser_scroll,mcp__playwright__browser_press_key,mcp__playwright__browser_wait_for,mcp__playwright__browser_evaluate,mcp__playwright__browser_run_code,mcp__playwright__browser_console_messages,mcp__playwright__browser_network_requests,mcp__playwright__browser_handle_dialog,mcp__playwright__browser_navigate_back,mcp__playwright__browser_resize,mcp__playwright__browser_tabs,mcp__playwright__browser_file_upload,mcp__playwright__browser_pdf_save,mcp__playwright__browser_close,mcp__playwright__browser_mouse_click_xy,mcp__playwright__browser_mouse_down,mcp__playwright__browser_mouse_up,mcp__playwright__browser_mouse_move_xy,mcp__playwright__browser_mouse_drag_xy,mcp__playwright__browser_mouse_wheel,mcp__playwright__browser_generate_locator,mcp__playwright__browser_verify_text_visible,mcp__playwright__browser_verify_list_visible,mcp__playwright__browser_verify_element_visible,mcp__playwright__browser_verify_value"
